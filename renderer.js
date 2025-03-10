@@ -1,6 +1,3 @@
-// renderer.js
-const fs = require('fs');
-const path = require('path');
 
 // DOM Elements
 const audioPlayer = document.getElementById('audio-player');
@@ -107,33 +104,33 @@ function togglePlayPause() {
 
 // Handle track ended
 function handleTrackEnded() {
-    if (repeatMode === 'one') {
-      // Repeat the same track
-      audioPlayer.currentTime = 0;
-      audioPlayer.play();
-    } else if (repeatMode === 'all') {
-      // Play next track, will loop around at the end
-      playNextTrack();
-    } else if (shuffleMode) {
-      // Play random track
-      playRandomTrack();
+  if (repeatMode === 'one') {
+    // Repeat the same track
+    audioPlayer.currentTime = 0;
+    audioPlayer.play();
+  } else if (repeatMode === 'all') {
+    // Play next track, will loop around at the end
+    playNextTrack();
+  } else if (shuffleMode) {
+    // Play random track
+    playRandomTrack();
+  } else {
+    // Normal behavior - play next track
+    // Check if we're at the end before playing next
+    const isLastTrack = isPlaylistActive && currentPlaylistTracks.length > 0 ? 
+      currentPlaylistTracks.indexOf(currentTrackIndex) === currentPlaylistTracks.length - 1 :
+      currentTrackIndex === musicLibrary.length - 1;
+      
+    if (isLastTrack) {
+      // Stop at the end if not in repeat mode
+      audioPlayer.pause();
+      isPlaying = false;
+      playPauseBtn.innerHTML = '▶'; // Play symbol
     } else {
-      // Normal behavior - play next track
-      // Check if we're at the end before playing next
-      const isLastTrack = isPlaylistActive && currentPlaylistTracks.length > 0 ? 
-        currentPlaylistTracks.indexOf(currentTrackIndex) === currentPlaylistTracks.length - 1 :
-        currentTrackIndex === musicLibrary.length - 1;
-        
-      if (isLastTrack) {
-        // Stop at the end if not in repeat mode
-        audioPlayer.pause();
-        isPlaying = false;
-        playPauseBtn.innerHTML = '▶'; // Play symbol
-      } else {
-        playNextTrack();
-      }
+      playNextTrack();
     }
   }
+}
 
 // Play random track
 function playRandomTrack() {
@@ -169,7 +166,6 @@ function playNextTrack() {
     audioPlayer.play();
   }
 }
-
 
 // Play previous track
 function playPrevTrack() {
@@ -585,36 +581,6 @@ function formatTime(seconds) {
   return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
 }
 
-// Initialize the app
-document.addEventListener('DOMContentLoaded', () => {
-  initPlayer();
-  
-  // Set up the screen views
-  const screens = ['nowPlaying', 'albums', 'artists', 'songs', 'playlists', 'settings'];
-  screens.forEach(screen => {
-    // Create screen views if they don't exist
-    if (!document.getElementById(`${screen}-view`)) {
-      createScreenView(screen);
-    }
-  });
-  
-  // Add data-screen attributes to menu items if not already set
-  menuItems.forEach((item, index) => {
-    if (!item.getAttribute('data-screen')) {
-      item.setAttribute('data-screen', screens[index] || 'nowPlaying');
-    }
-  });
-  
-  // Show the now playing screen by default
-  showScreen('nowPlaying');
-  
-  // Initial button state
-  playPauseBtn.innerHTML = '▶'; // Initial play symbol
-  
-  // Add click event listeners to list items when they are created
-  addClickListenersToListItems();
-});
-
 // Create a screen view element
 function createScreenView(screenName) {
   // Skip if this view already exists
@@ -703,27 +669,7 @@ function addClickListenersToListItems() {
   });
 }
 
-// Observer to detect when new list items are added to the DOM
-const observer = new MutationObserver((mutations) => {
-  mutations.forEach((mutation) => {
-    if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-      // Check if any added nodes contain list items
-      mutation.addedNodes.forEach(node => {
-        if (node.querySelectorAll) {
-          const listItems = node.querySelectorAll('.list-view li');
-          if (listItems.length > 0) {
-            addClickListenersToListItems();
-          }
-        }
-      });
-    }
-  });
-});
-
-// Start observing the document body for DOM changes
-observer.observe(document.body, { childList: true, subtree: true });
-
-function handleVolumeChange(event) {
+function handleVolumeChange() {
   const volumeSlider = document.getElementById('volume-slider');
   const volumeValue = document.getElementById('volume-value');
   
@@ -735,23 +681,24 @@ function handleVolumeChange(event) {
   
   // Update volume icon based on level
   const volumeIcon = document.getElementById('volume-icon');
-  if (volumeSlider.value == 0) {
+  if (parseInt(volumeSlider.value) === 0) {
     volumeIcon.textContent = '🔇';
-  } else if (volumeSlider.value < 33) {
+  } else if (parseInt(volumeSlider.value) < 33) {
     volumeIcon.textContent = '🔈';
-  } else if (volumeSlider.value < 66) {
+  } else if (parseInt(volumeSlider.value) < 66) {
     volumeIcon.textContent = '🔉';
   } else {
     volumeIcon.textContent = '🔊';
   }
 }
 
-// Add this to your initPlayer function
+// Initialize volume control
 function initVolumeControl() {
   const volumeSlider = document.getElementById('volume-slider');
   
   // Set initial value
-  volumeSlider.value = audioPlayer.volume * 100;
+  volumeSlider.value = 100;
+  audioPlayer.volume = 1;
   
   // Add event listener
   volumeSlider.addEventListener('input', handleVolumeChange);
@@ -760,6 +707,57 @@ function initVolumeControl() {
   handleVolumeChange();
 }
 
-// Call this from your initPlayer function
-// Add it at the end of the initPlayer function
-initVolumeControl();
+// Setup observer to detect when new list items are added to the DOM
+const observer = new MutationObserver((mutations) => {
+  mutations.forEach((mutation) => {
+    if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+      // Check if any added nodes contain list items
+      mutation.addedNodes.forEach((node) => {
+        if (node.querySelectorAll) {
+          const listItems = node.querySelectorAll('.list-view li');
+          if (listItems.length > 0) {
+            // Add click listeners to these new list items
+            listItems.forEach((item, index) => {
+              item.addEventListener('click', () => {
+                selectedListItem = index;
+                updateSelectedListItem();
+                handleListItemSelection();
+              });
+            });
+          }
+        }
+      });
+    }
+  });
+});
+
+// Start observing the screen element for added list items
+observer.observe(document.querySelector('.screen'), {
+  childList: true,
+  subtree: true
+});
+
+// Start the app when the DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+  initPlayer();
+  initVolumeControl();
+  
+  // Add keyboard controls for testing in browser
+  document.addEventListener('keydown', (e) => {
+    switch(e.key) {
+      case ' ':
+        handleCenterButton();
+        break;
+      case 'ArrowUp':
+        handlePrevButton();
+        break;
+      case 'ArrowDown':
+        handleNextButton();
+        break;
+      case 'Escape':
+      case 'Backspace':
+        handleMenuButton();
+        break;
+    }
+  });
+});
