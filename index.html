@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>iPod Style Music Player</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="player-container">
+    <div class="screen">
+      <!-- Now Playing View (Default) -->
+      <div class="screen-content" id="nowPlaying-view">
+        <div class="album-art">
+          <img id="album-cover" src="assets/default-cover.jpg" alt="Album Cover">
+        </div>
+        <div class="track-info">
+          <p id="song-title">Song Title</p>
+          <p id="artist-name">Artist Name</p>
+        </div>
+        <div class="progress-container">
+          <div class="time-info">
+            <span id="current-time">0:00</span>
+            <span id="total-time">0:00</span>
+          </div>
+          <div class="progress-bar">
+            <div id="progress"></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Menu Overlay -->
+      <div id="menu-overlay" class="menu-overlay">
+        <ul class="menu-list">
+          <li class="menu-item active" data-screen="nowPlaying">Now Playing</li>
+          <li class="menu-item" data-screen="albums">Albums</li>
+          <li class="menu-item" data-screen="artists">Artists</li>
+          <li class="menu-item" data-screen="songs">Songs</li>
+          <li class="menu-item" data-screen="playlists">Playlists</li>
+          <li class="menu-item" data-screen="settings">Settings</li>
+        </ul>
+      </div>
+      
+      <!-- The other screen views will be dynamically created by JavaScript -->
+    </div>
+    <div class="controls-wrapper">
+      <div class="controls">
+        <div class="wheel">
+          <button id="menu-button" class="button-top">▲</button>
+          <div class="middle-row">
+            <button id="prev-button" class="button-left">◀</button>
+            <button id="center-button" class="button-center">OK</button>
+            <button id="next-button" class="button-right">▶</button>
+          </div>
+          <button id="play-pause-button" class="button-bottom">▼</button>
+        </div>
+      </div>
+      <div class="volume-container">
+        <div class="volume-info">
+          <span id="volume-icon">🔊</span>
+          <span id="volume-value">100%</span>
+        </div>
+        <input type="range" id="volume-slider" min="0" max="100" value="100" orient="vertical">
+      </div>
+    </div>
+  </div>
+
+
+  <audio id="audio-player"></audio>
+  <script src="renderer.js"></script>
+  <script src="music.js"></script>
+</body>
+</html>
